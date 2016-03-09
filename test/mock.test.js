@@ -61,7 +61,7 @@ describe('mock tests', function () {
   });
 
   describe('collections', function () {
-    'insert,findOne,update,remove'.split(',').forEach(function(key) {
+    'insert,findOne,update,remove,updateOne'.split(',').forEach(function(key) {
       it("should have a '"+key+"' function", function () {
         collection.should.have.property(key);
         collection[key].should.be.type('function');
@@ -188,6 +188,33 @@ describe('mock tests', function () {
             n.should.equal(1);
             done();
           });
+        });
+      });
+    }),
+    it('should updateOne', function (done) {
+      //query, data, options, callback
+      collection.updateOne({test:123}, {$set:{foo:"bar"}}, function (err, result) {
+        if(err) return done(err);
+        result.u.should.equal(1);
+
+        collection.findOne({test:123}, function (err, doc) {
+          if(err) return done(err);
+          (!!doc).should.be.true;
+          doc.should.have.property("foo", "bar");
+          done();
+        });
+      });
+    });
+    it('should upsert', function (done) {
+      //prove it isn't there...
+      collection.updateOne({test: 1}, {test: 1, bar: "none"}, {upsert: true}, function (err, result) {
+        if (err) return done(err);
+        result.n.should.equal(0);
+
+        collection.find({test: 1}).count(function (err, n) {
+          if (err) return done(err);
+          n.should.equal(2);
+          done();
         });
       });
     })
